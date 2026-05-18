@@ -83,22 +83,16 @@ The chronyd.service needs to start after the gpsd.service. First we need to swit
 (gps). Edit /etc/chrony/chrony.conf and comment out the "pool" and "sourcedir" directives. Add these two
 lines to the end of the file:
 
-"
-    refclock SHM 0 poll 3 delay 0.0 refid SHM0
-    allow all
-"
+      refclock SHM 0 poll 3 delay 0.0 refid SHM0
+      allow all
 
 Use "sudo systemctl edit --full chrony.service" to add the following to the end of the [Unit] section:
 
-"
-    After=gpsd.service
-"
+      After=gpsd.service
 
 Use "sudo systemctl edit --full gpsd.service" to change the [Unit] section:
 
-"
-    Before=chronyd.service
-"
+      Before=chronyd.service
 
 2) Indigo download and configuration.
 
