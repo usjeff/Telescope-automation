@@ -1,58 +1,51 @@
 # Telescope-automation
 This project is to automate a 4" refractor and goto mount.
 
-The main components are:
-       Raspberry Pi based wireless access point w/ USB GPS, Adafruit
-       motor hat based focuser, Indigo-astronomy focuser driver, and
-       Raspberry HQ camera
+The main components are: Raspberry Pi based wireless access point w/ USB GPS, Adafruit motor hat based focuser, Indigo-astronomy focuser driver, and Raspberry HQ camera
 
-       The target software is the Indigo-astronomy imager (ain_imager).
-       This recipe has been tested on a Raspberry Pi4 running Debian 
-       version 1:6.12.75-1+rpt1 (2026-03-11) aarch64 (Trixie).
- 
+The target software is the Indigo-astronomy imager (ain_imager). This recipe has been tested on a Raspberry Pi4 running Debian 
+version 1:6.12.75-1+rpt1 (2026-03-11) aarch64 (Trixie).
 
-Focuser Parts List:
+       Focuser Parts List:
+       www.adafruit.com/product/4280         (Stepper motor hat for Raspberry Pi)
+       www.adafruit.com/product/324          (NEMA-17 stepper motor)
+       www.adafruit.com/product/1297         (NEMA-17 stepper motor mount /w hardware)
+       www.adafruit.com/product/1311         (hook-up wire)
+       www.adafruit.com/product/344          (heat shrink tubing)
+       www.adafruit.com/product/352          (12v switching power supply)
 
-www.adafruit.com/product/4280         (Stepper motor hat for Raspberry Pi)
-www.adafruit.com/product/324          (NEMA-17 stepper motor)
-www.adafruit.com/product/1297         (NEMA-17 stepper motor mount /w hardware)
-www.adafruit.com/product/1311         (hook-up wire)
-www.adafruit.com/product/344          (heat shrink tubing)
-www.adafruit.com/product/352          (12v switching power supply)
+       1" x 2" aluminum angle iron
+       2GT timing belt pulley - 20 teeth, 6mm width, 5mm bore 
+       2GT timing belt - 6mm width, 164mm length
+       Alex Tech Braided cable sleeve
 
-1" x 2" aluminum angle iron
-2GT timing belt pulley - 20 teeth, 6mm width, 5mm bore 
-2GT timing belt - 6mm width, 164mm length
-Alex Tech Braided cable sleeve
+Raspberry Pi 4 setup for Debian trixie server.
 
+       1) Wireless to wired bridge (Losmandy Gemini2)
 
+       configure the RPi4 as a wireless access point for the Gemini 2 
+       telescope controller. The RPi4 also proves: NTP server, GPS,
+       serial access, RPi HQ camera, and stepper motor focuser.
 
-        Raspberry Pi 4 setup for Debian trixie server.
+       sudo apt update
+       sudo apt upgrade
 
-        1) Wireless to wired bridge (Losmandy Gemini2)
+       Enable i2c and ssh.
 
-        configure the RPi4 as a wireless access point for the Gemini 2 
-        telescope controller. The RPi4 also proves: NTP server, GPS,
-        serial access, RPi HQ camera, and stepper motor focuser.
+       Install/download the following:
 
-sudo apt update
-sudo apt upgrade
+       lshw ethtool dmidecode gpm
+       wget wput unzip usbutils net-tools ntpstat dnsutils
+       git build-essential autoconf autotools-dev libtool cmake libudev-dev
 
-Enable i2c and ssh.
+       chrony gpsd gpsd-tools gpsd-clients 
+       python3-gps python3-pip python3-numpy python3-flask
 
-Install/download the following:
+       Use udev to create symbolic links to the gps and telescope USB interfaces. This will allow software to find them
+       no mater if they move during enumeration.
 
-lshw ethtool dmidecode gpm
-wget wput unzip usbutils net-tools ntpstat dnsutils
-git build-essential autoconf autotools-dev libtool cmake libudev-dev
-
-chrony gpsd gpsd-tools gpsd-clients 
-python3-gps python3-pip python3-numpy python3-flask
-
-Use udev to create symbolic links to the gps and telescope USB interfaces. This will allow software to find them
-no mater if they move during enumeration.
-
-Create fixed paths for the USB gemini2 serial port and u-blox GPS by adding the following udev rule in /etc/udev/rules.d/04-gem.rules
+       Create fixed paths for the USB gemini2 serial port and u-blox GPS by adding the following udev rule in
+       /etc/udev/rules.d/04-gem.rules
 
 KERNEL=="1-1.[0-9]", SUBSYSTEM=="usb", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", SYMLINK="usbGPS", GROUP="dialout", MODE="0666"
 KERNEL=="1-1.[0-9]", SUBSYSTEM=="usb", ATTRS{idVendor}=="1fc9", ATTRS{idProduct}=="1705", SYMLINK="usbGEM", GROUP="dialout", MODE="0666" 
@@ -60,20 +53,14 @@ KERNEL=="1-1.[0-9]", SUBSYSTEM=="usb", ATTRS{idVendor}=="1fc9", ATTRS{idProduct}
 KERNEL=="ttyACM[0-9]*", SUBSYSTEM=="tty", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", SYMLINK="ttyGPS", GROUP="dialout", MODE="0666"
 KERNEL=="ttyACM[0-9]*", SUBSYSTEM=="tty", ATTRS{idVendor}=="1fc9", ATTRS{idProduct}=="1705", SYMLINK="ttyGEM", GROUP="dialout", MODE="0666"
 
-
-
 Install the adafruit motorkit library according the instructions here:
+      https://learn.adafruit.com/adafruit-dc-and-stepper-motor-hat-for-raspberry-pi/installing-software
+      ie: pip3 install adafruit-circuitpython-motorkit --break-system-packages
 
-https://learn.adafruit.com/adafruit-dc-and-stepper-motor-hat-for-raspberry-pi/installing-software
-
-ie: pip3 install adafruit-circuitpython-motorkit --break-system-packages
+      Set the gpsd defaults file at /etc/defaults/gpsd
 
 
-
-Set the gpsd defaults file at /etc/defaults/gpsd
-
-"
-# Devices gpsd should collect to at boot time.
+# Devices gpsd should connect to at boot time.
 # They need to be read/writeable, either by user gpsd or the group dialout.
 DEVICES="/dev/ttyGPS"
 
@@ -86,14 +73,13 @@ USBAUTO="false"
 
 Enable the gpsd.service via:
 
-sudo systemctl status gpsd.service
-sudo systemctl enable gpsd.service
-sudo systemctl restart gpsd.service
-sudo systemctl status gpsd.service
+  sudo systemctl status gpsd.service
+  sudo systemctl enable gpsd.service
+  sudo systemctl restart gpsd.service
+  sudo systemctl status gpsd.service
 
 NOTE: If gps does not return data after a few minutes; try disconnecting other usb devices. Ssh in
 from another system and use gpsmon or cgps to look at gps data. You should have time and location.
-
 
 The chronyd.service needs to start after the gpsd.service. First we need to switch to the local clock
 (gps). Edit /etc/chrony/chrony.conf and comment out the "pool" and "sourcedir" directives. Add these two
@@ -152,8 +138,7 @@ ain_imager <RPi4 IP>
 
 Under the "File" tab select "Manage Services". Ensure "Available Services" has <RPi4 IP>:7624 selected.
 
-You should now be able to select the camera (RPi Camera imx477@1a), focuser (Adafruit Motor Hat Focuser), Mount (lx200), and GPS
-(GPSD client).
+You should now be able to select the camera (RPi Camera imx477@1a), focuser (Adafruit Motor Hat Focuser), Mount (lx200), and GPS (GPSD client).
 
 
 
