@@ -71,10 +71,10 @@ Install the adafruit motorkit library according the instructions here:
 
 Enable the gpsd.service via:
 
-  sudo systemctl status gpsd.service
-  sudo systemctl enable gpsd.service
-  sudo systemctl restart gpsd.service
-  sudo systemctl status gpsd.service
+      sudo systemctl status gpsd.service
+      sudo systemctl enable gpsd.service
+      sudo systemctl restart gpsd.service
+      sudo systemctl status gpsd.service
 
 NOTE: If gps does not return data after a few minutes; try disconnecting other usb devices. Ssh in
 from another system and use gpsmon or cgps to look at gps data. You should have time and location.
