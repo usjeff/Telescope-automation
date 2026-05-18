@@ -47,11 +47,11 @@ Raspberry Pi 4 setup for Debian trixie server.
        Create fixed paths for the USB gemini2 serial port and u-blox GPS by adding the following udev rule in
        /etc/udev/rules.d/04-gem.rules
 
-KERNEL=="1-1.[0-9]", SUBSYSTEM=="usb", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", SYMLINK="usbGPS", GROUP="dialout", MODE="0666"
-KERNEL=="1-1.[0-9]", SUBSYSTEM=="usb", ATTRS{idVendor}=="1fc9", ATTRS{idProduct}=="1705", SYMLINK="usbGEM", GROUP="dialout", MODE="0666" 
+       KERNEL=="1-1.[0-9]", SUBSYSTEM=="usb", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", SYMLINK="usbGPS",GROUP="dialout", MODE="0666"
+       KERNEL=="1-1.[0-9]", SUBSYSTEM=="usb", ATTRS{idVendor}=="1fc9", ATTRS{idProduct}=="1705", SYMLINK="usbGEM",GROUP="dialout", MODE="0666" 
 
-KERNEL=="ttyACM[0-9]*", SUBSYSTEM=="tty", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", SYMLINK="ttyGPS", GROUP="dialout", MODE="0666"
-KERNEL=="ttyACM[0-9]*", SUBSYSTEM=="tty", ATTRS{idVendor}=="1fc9", ATTRS{idProduct}=="1705", SYMLINK="ttyGEM", GROUP="dialout", MODE="0666"
+       KERNEL=="ttyACM[0-9]*", SUBSYSTEM=="tty", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", SYMLINK="ttyGPS",GROUP="dialout", MODE="0666"
+       KERNEL=="ttyACM[0-9]*", SUBSYSTEM=="tty", ATTRS{idVendor}=="1fc9", ATTRS{idProduct}=="1705", SYMLINK="ttyGEM",GROUP="dialout", MODE="0666"
 
 Install the adafruit motorkit library according the instructions here:
       https://learn.adafruit.com/adafruit-dc-and-stepper-motor-hat-for-raspberry-pi/installing-software
@@ -59,17 +59,15 @@ Install the adafruit motorkit library according the instructions here:
 
       Set the gpsd defaults file at /etc/defaults/gpsd
 
+      # Devices gpsd should connect to at boot time.
+      # They need to be read/writeable, either by user gpsd or the group dialout.
+      DEVICES="/dev/ttyGPS"
 
-# Devices gpsd should connect to at boot time.
-# They need to be read/writeable, either by user gpsd or the group dialout.
-DEVICES="/dev/ttyGPS"
+      # Other options you want to pass to gpsd
+      GPSD_OPTIONS="-p --nowait --listenany"
 
-# Other options you want to pass to gpsd
-GPSD_OPTIONS="-p --nowait --listenany"
-
-# Automatically hot add/remove USB GPS devices via gpsdctl
-USBAUTO="false"
-"
+      # Automatically hot add/remove USB GPS devices via gpsdctl
+      USBAUTO="false"
 
 Enable the gpsd.service via:
 
@@ -86,27 +84,27 @@ The chronyd.service needs to start after the gpsd.service. First we need to swit
 lines to the end of the file:
 
 "
-refclock SHM 0 poll 3 delay 0.0 refid SHM0
-allow all
+    refclock SHM 0 poll 3 delay 0.0 refid SHM0
+    allow all
 "
 
 Use "sudo systemctl edit --full chrony.service" to add the following to the end of the [Unit] section:
 
 "
-After=gpsd.service
+    After=gpsd.service
 "
 
 Use "sudo systemctl edit --full gpsd.service" to change the [Unit] section:
 
 "
-Before=chronyd.service
+    Before=chronyd.service
 "
 
 2) Indigo download and configuration.
 
 Use "git" to download the indigo-astronomy software:
 
-git clone https://github.com/indigo-astronomy/indigo
+  git clone https://github.com/indigo-astronomy/indigo
 
 follow the directions to make sure you can compile the indigo-astronomy software on your
 raspberry pi.
@@ -120,9 +118,9 @@ $HOME/indigo/indigo_drivers/focuser_adafruitmh
 
 Edit $HOME/indigo/Makefile and add "focuser_adafruitmh" to the list of STABLE_DRIVERS
 
-do:
-make all
-sudo make install
+   do:
+   make all
+   sudo make install
 
 If the gemini2, motor hat, and camera are connected the command should execute without error.
 
