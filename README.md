@@ -128,7 +128,7 @@ On a second computer (RPi5), install ain_imager and indigo-control-panel.
 Launch the imager:
 ain_imager <RPi4 IP>
 
-Under the "File" tab select "Manage Services". Ensure "Available Services" has <RPi4 IP>:7624 selected.
+Under the "File" tab select "Manage Services". Ensure "Available Services" has the RPi4_IP:7624 selected.
 
 You should now be able to select the camera (RPi Camera imx477@1a), focuser (Adafruit Motor Hat Focuser), Mount (lx200), and GPS (GPSD client).
 
