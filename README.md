@@ -112,9 +112,9 @@ $HOME/indigo/indigo_drivers/focuser_adafruitmh
 
 Edit $HOME/indigo/Makefile and add "focuser_adafruitmh" to the list of STABLE_DRIVERS
 
-   do:
-   make all
-   sudo make install
+do:
+      make all
+      sudo make install
 
 If the gemini2, motor hat, and camera are connected the command should execute without error.
 
@@ -123,7 +123,7 @@ $HOME/indigo/build/bin/indigo_server indigo_focuser_adafruit indigo_ccd_rpi indi
 
 On a second computer (RPi5), install ain_imager and indigo-control-panel.
 
-sudo apt install ain_imager indigo-control-panel
+      sudo apt install ain_imager indigo-control-panel
 
 Launch the imager:
 ain_imager <RPi4 IP>
