@@ -4,7 +4,7 @@ This project is to automate a 4" refractor and goto mount.
 The main components are: Raspberry Pi based wireless access point w/ USB GPS, Adafruit motor hat based focuser, Indigo-astronomy focuser driver, and Raspberry HQ camera
 
 The target software is the Indigo-astronomy imager (ain_imager). This recipe has been tested on a Raspberry Pi4 running Debian 
-version 1:6.12.75-1+rpt1 (2026-03-11) aarch64 (Trixie).
+version 1:6.12.75-1+rpt1 (2026-03-11) aarch64 (Trixie), INDIGO server v.2.0-362.
 
        Focuser Parts List:
        www.adafruit.com/product/4280         (Stepper motor hat for Raspberry Pi)
