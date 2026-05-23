@@ -112,7 +112,7 @@ $HOME/indigo/indigo_drivers/focuser_adafruitmh
 
 Edit $HOME/indigo/Makefile and add "focuser_adafruitmh" to the list of STABLE_DRIVERS
 
-do:
+    do:
       make all
       sudo make install
 
@@ -125,13 +125,13 @@ On a second computer (RPi5), install ain_imager and indigo-control-panel.
 
       sudo apt install ain_imager indigo-control-panel
 
-Launch the imager:
-ain_imager <RPi4 IP>
+Launch the imager: ain_imager "your RPi4 IP address"
 
 Under the "File" tab select "Manage Services". Ensure "Available Services" has the RPi4_IP:7624 selected.
 
 You should now be able to select the camera (RPi Camera imx477@1a), focuser (Adafruit Motor Hat Focuser), Mount (lx200), and GPS (GPSD client).
 
+If AutoFocus does not work at the highest resolution of the RPi camera due to the file download taking too long, switch to a lower resolution. Resolution BGR24 1920x1200 worked OK for me on a 5G wifi link.
 
 
 
