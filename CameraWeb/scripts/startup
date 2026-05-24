@@ -1,8 +1,0 @@
-#!/bin/bash
-
-./lx200_cmd.py set_slew 0
-./lx200_cmd.py park
-./lx200_cmd.py ntp_sync
-./lx200_cmd.py set_dbl
-./lx200_cmd.py set_lat_lon 
-
