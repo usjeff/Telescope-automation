@@ -1,0 +1,3 @@
+[submodule "CameraWeb"]
+	path = CameraWeb
+	url = https://github.com/usjeff/Telescope-automation/tree/main
