@@ -4,3 +4,4 @@ The lx200_cmd.py file is a python script that uses the serial interface on RPi a
         Ex: ./lx200_cmd.py get_batt
         Ex: ./lx200_cmd.py get_echo A
 
+
