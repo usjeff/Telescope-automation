@@ -3,5 +3,5 @@ The lx200_cmd.py file is a python script that uses the serial interface on RPi a
         Ex: ./lx200_cmd.py lx200 <322      #get_batt
         Ex: ./lx200_cmd.py get_batt
         Ex: ./lx200_cmd.py get_echo A
-        Ex: ./lx200_cmd.py set_lat_lon     # get the the site lat and lon from the gps and set them to gemini 
-
+        Ex: ./lx200_cmd.py set_lat_lon     # get the site lat and lon from the gps and set them to gemini 
+        Ex: ./lx200_cmd.py ntp_sync        # sync the gemini clock to the RPi chrony NTP. 
