@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RPi4GEM Camera</title>
+
+    <!-- Makes page scale properly on tablets/phones -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body { 
+              font-family: Arial; 
+              text-align:center; 
+              background:#f7f7f7; 
+              margin: 0;
+              padding: 0;
+        }
+        
+  
+        img { 
+             width: 95%;
+             heigth: auto;
+             max-width: 1000px; 
+             border: 3px solid #333; 
+             margin-top: 15px; 
+             cursor: pointer;   /* The image is tappable */
+        }
+        
+        button {
+                font-size: 5vw;
+                max-font-size: 28px;
+                padding: 10px 20px;
+                margin-top: 20px;
+                border-radius: 10px;
+                border: none;
+                background: #4CAF50;
+                color: white;
+                cursor: pointer;
+        }
+
+        @media (min-width: 700px) {
+            h1 { font-size: 32px; }
+            button { font-size: 22px }
+        }      
+
+     </style>
+</head>
+<body>
+    <!-- Focus controls here -->
+    <div style="margin-top:20px; font-size:20px;">
+
+        <label for="focus_value">Focus step:</label>
+        <input id="focus_value" type="number" min="1" max="5000" value="5" step="1" oninput="saveFocusValue()"/>
+
+        <!-- Left button -->
+        <button onclick="sendFocus(-1)">&lt;</button>
+
+        <!-- Right button -->
+        <button onclick="sendFocus(1)">&gt;</button>
+
+    </div>
+   
+    <img id="photo" 
+         src="/static/latest.jpg?ts={{ ts }}" 
+         alt="Camera Image"
+         onclick="capturePhoto()">
+
+    <br>
+
+    <script>
+        function capturePhoto() {
+            <!-- console.log("captutePhoto called"); //DEBUG -->
+
+            // Redirect to /capture, which takes the image and returns here 
+            window.location.href = "/capture";
+        } 
+
+    </script>
+
+    <script>
+        function adjustFocus(n) {
+            // Block until server finishes the focus movement
+            n = parseInt(n, 10);
+            window.location.href = "/focus/" + n;
+        }
+    </script> 
+
+    <script>
+        function dendFocus(direction) {
+            console.log("sendFocus called, direction =", direction); //DEBUG
+
+            try {
+                let el = document.getElementById("focus_value");
+                console.log("Element:", el);
+                
+                let raw = el.value;
+                console.log("Raw value:", raw);
+
+                let val = parseInt(raw);
+                console.log("Parsed val:", val);
+
+            } catch (err) {
+                console.log("JS ERROR", err); 
+            }    
+        }
+    </script>
+
+    <script>
+        function bendFocus(direction) {
+            <!-- console.log("sendFocus called, direction =", direction); //DEBU -->
+            const val = parseInt(document.getElementById("focus_value").value);
+            <!-- console.log("Parsed val:", val); -->
+
+            if (isNaN(val)) {
+                alert("Please enter a whole number.");
+                return;
+            }
+
+            const amount = direction * val;
+            <!-- console.log("Amount:", amount); -->
+
+            // Redirect to /focus, which does the focus movement and returns here
+            window.location.href = "/focus/" + amount;
+
+
+        }
+    </script>
+
+    <script>
+        function sendFocus(direction) {
+            <!-- console.log("sendFocus called, direction =", direction); //DEBU --> 
+            const val = parseInt(document.getElementById("focus_value").value);
+            <!-- console.log("Parsed val:", val); -->
+
+            if (isNaN(val)) {
+                alert("Please enter a whole number.");
+                return;
+            }
+
+            const amount = direction * val;
+            <!-- console.log("Amount:", amount); -->
+
+            fetch(`/focus/${amount}`)
+               .then(response => {
+                   if (!response.ok) alert("Focus request failed" + response.status);
+               });
+        }
+    </script>
+
+    <script>
+        // Restore saved value at load
+        window.addEventListener("DOMContentLoaded", () => {
+            const saved = localStorage.getItem("focus_step");
+            if (saved !== null) {
+                document.getElementById("focus_value").value = saved
+            }
+        });
+
+        // Save value whenever changed
+        function saveFocusValue() {
+            const v = document.getElementById("focus_value").value
+            localStorage.setItem("focus_step", v);
+        }
+    </script>
+
+
+
+</body>
+</html>   
