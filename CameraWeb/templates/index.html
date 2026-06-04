@@ -1,169 +1,662 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>RPi4GEM Camera</title>
-
-    <!-- Makes page scale properly on tablets/phones -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;500;700&display=swap" rel="stylesheet">
 
     <style>
-        body { 
-              font-family: Arial; 
-              text-align:center; 
-              background:#f7f7f7; 
-              margin: 0;
-              padding: 0;
-        }
-        
-  
-        img { 
-             width: 95%;
-             heigth: auto;
-             max-width: 1000px; 
-             border: 3px solid #333; 
-             margin-top: 15px; 
-             cursor: pointer;   /* The image is tappable */
-        }
-        
-        button {
-                font-size: 5vw;
-                max-font-size: 28px;
-                padding: 10px 20px;
-                margin-top: 20px;
-                border-radius: 10px;
-                border: none;
-                background: #4CAF50;
-                color: white;
-                cursor: pointer;
+        :root {
+            --bg:       #0d1117;
+            --panel:    #161b22;
+            --border:   #30363d;
+            --accent:   #58a6ff;
+            --accent2:  #3fb950;
+            --danger:   #f85149;
+            --text:     #e6edf3;
+            --muted:    #8b949e;
+            --mono:     'Share Tech Mono', monospace;
+            --sans:     'Exo 2', sans-serif;
         }
 
-        @media (min-width: 700px) {
-            h1 { font-size: 32px; }
-            button { font-size: 22px }
-        }      
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-     </style>
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 0 40px;
+        }
+
+        /* ── Header ──────────────────────────────────────────── */
+        header {
+            width: 100%;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .lens-icon {
+            width: 32px; height: 32px;
+            border: 3px solid var(--accent);
+            border-radius: 50%;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .lens-icon::after {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        header h1 {
+            font-family: var(--mono);
+            font-size: clamp(14px, 4vw, 22px);
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+        header h1 span { color: var(--muted); font-size: 0.7em; }
+
+        /* ── Main image ──────────────────────────────────────── */
+        .image-wrap {
+            width: 95%;
+            max-width: 960px;
+            margin-top: 18px;
+            position: relative;
+            cursor: pointer;
+        }
+        .image-wrap img {
+            width: 100%;
+            height: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            display: block;
+            transition: opacity 0.2s;
+        }
+        .image-wrap:hover img { opacity: 0.88; }
+        .capture-hint {
+            position: absolute;
+            bottom: 10px; right: 12px;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(0,0,0,0.6);
+            padding: 3px 8px;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .image-wrap:hover .capture-hint { opacity: 1; }
+
+        /* ── Controls card ───────────────────────────────────── */
+        .controls-card {
+            width: 95%;
+            max-width: 960px;
+            margin-top: 14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* ── Focus row ───────────────────────────────────────── */
+        .focus-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .focus-row label {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--muted);
+            flex-shrink: 0;
+        }
+        .focus-row input[type=number] {
+            width: 80px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 15px;
+            padding: 6px 8px;
+            text-align: center;
+        }
+        .focus-row input[type=number]:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .btn {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 18px;
+            padding: 6px 18px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .btn:hover { background: var(--border); border-color: var(--accent); }
+        .btn.green  { border-color: var(--accent2); color: var(--accent2); }
+        .btn.green:hover { background: rgba(63,185,80,0.12); }
+
+        /* ── Param panel toggle ──────────────────────────────── */
+        .param-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .param-toggle:hover { background: rgba(88,166,255,0.05); }
+        .param-toggle.open  { border-bottom-color: var(--border); }
+        .param-toggle-label {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+        .chevron {
+            font-size: 12px;
+            color: var(--muted);
+            transition: transform 0.25s;
+        }
+        .chevron.open { transform: rotate(180deg); }
+
+        /* ── Param grid ──────────────────────────────────────── */
+        .param-body {
+            display: none;
+            padding: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px 20px;
+        }
+        .param-body.open { display: grid; }
+
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .param-group label {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .param-group select,
+        .param-group input[type=text],
+        .param-group input[type=number] {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 13px;
+            padding: 7px 10px;
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        .param-group select:focus,
+        .param-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        /* custom arrow for selects */
+        .select-wrap { position: relative; }
+        .select-wrap::after {
+            content: '▾';
+            position: absolute;
+            right: 10px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            pointer-events: none;
+            font-size: 12px;
+        }
+        .select-wrap select { padding-right: 28px; }
+
+        /* ── Apply / status row ──────────────────────────────── */
+        .apply-row {
+            display: none;
+            padding: 10px 16px 16px;
+            gap: 12px;
+            align-items: center;
+        }
+        .apply-row.open { display: flex; }
+        .btn-apply {
+            background: rgba(88,166,255,0.12);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 13px;
+            padding: 8px 22px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-apply:hover { background: rgba(88,166,255,0.22); }
+        #param-status {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--muted);
+        }
+        #param-status.ok  { color: var(--accent2); }
+        #param-status.err { color: var(--danger); }
+
+        /* ── Resolution row (special) ────────────────────────── */
+        .res-pair {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .res-pair span { color: var(--muted); font-family: var(--mono); }
+        .res-pair input { flex: 1; min-width: 0; }
+
+        /* ── Toggle switches (flip) ──────────────────────────── */
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 0;
+        }
+        .toggle-wrap span {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--text);
+        }
+        .switch { position: relative; width: 40px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; inset: 0;
+            background: var(--border);
+            border-radius: 22px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .slider::before {
+            content: '';
+            position: absolute;
+            width: 16px; height: 16px;
+            left: 3px; top: 3px;
+            background: var(--muted);
+            border-radius: 50%;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .switch input:checked + .slider { background: rgba(88,166,255,0.25); }
+        .switch input:checked + .slider::before {
+            transform: translateX(18px);
+            background: var(--accent);
+        }
+    </style>
 </head>
 <body>
-    <!-- Focus controls here -->
-    <div style="margin-top:20px; font-size:20px;">
 
-        <label for="focus_value">Focus step:</label>
-        <input id="focus_value" type="number" min="1" max="5000" value="5" step="1" oninput="saveFocusValue()"/>
+<header>
+    <div class="lens-icon"></div>
+    <h1>RPi4GEM CAMERA &nbsp;<span>// rpicam-still</span></h1>
+</header>
 
-        <!-- Left button -->
-        <button onclick="sendFocus(-1)">&lt;</button>
+<!-- ── Live image (tap to capture) ─────────────────────────────────── -->
+<div class="image-wrap" onclick="capturePhoto()">
+    <img id="photo"
+         src="/static/latest.jpg?ts={{ ts }}"
+         alt="Camera Image">
+    <div class="capture-hint">TAP TO CAPTURE</div>
+</div>
 
-        <!-- Right button -->
-        <button onclick="sendFocus(1)">&gt;</button>
+<!-- ── Controls card ───────────────────────────────────────────────── -->
+<div class="controls-card">
 
+    <!-- Focus row -->
+    <div class="focus-row">
+        <label>FOCUS STEP</label>
+        <input id="focus_value" type="number" min="1" max="5000" value="5" step="1"
+               oninput="saveFocusValue()">
+        <button class="btn" onclick="sendFocus(-1)" title="Focus out">&lt&lt;</button>
+        <button class="btn" onclick="sendFocus(1)"  title="Focus in">&gt&gt;</button>
     </div>
-   
-    <img id="photo" 
-         src="/static/latest.jpg?ts={{ ts }}" 
-         alt="Camera Image"
-         onclick="capturePhoto()">
 
-    <br>
+    <!-- Camera params toggle -->
+    <div class="param-toggle" id="param-toggle" onclick="toggleParams()">
+        <span class="param-toggle-label">&#9881; CAMERA PARAMETERS</span>
+        <span class="chevron" id="chevron">&#9660;</span>
+    </div>
 
-    <script>
-        function capturePhoto() {
-            <!-- console.log("captutePhoto called"); //DEBUG -->
+    <!-- Param grid -->
+    <div class="param-body" id="param-body">
 
-            // Redirect to /capture, which takes the image and returns here 
-            window.location.href = "/capture";
-        } 
+        <!-- Shutter Speed -->
+        <div class="param-group">
+            <label>Shutter Speed (seconds)</label>
+            <input id="p-shutter" type="number" min="0.001" max="500" value="0.00001" step="0.001"
+                   placeholder="e.g. 0.01">
+        </div>
 
-    </script>
+        <!-- Gain (ISO) -->
+        <div class="param-group">
+            <label>Gain (ISO)</label>
+            <div class="select-wrap">
+                <select id="p-gain">
+                    <option value="1" selected>1× (ISO 100)</option>
+                    <option value="2">2× (ISO 200)</option>
+                    <option value="4">4× (ISO 400)</option>
+                    <option value="8">8× (ISO 800)</option>
+                    <option value="16">16× (ISO 1600)</option>
+                    <option value="32">32× (ISO 3200)</option>
+                    <option value="0">Auto</option>
+                </select>
+            </div>
+        </div>
 
-    <script>
-        function adjustFocus(n) {
-            // Block until server finishes the focus movement
-            n = parseInt(n, 10);
-            window.location.href = "/focus/" + n;
+        <!-- Metering -->
+        <div class="param-group">
+            <label>Metering Mode</label>
+            <div class="select-wrap">
+                <select id="p-metering">
+                    <option value="centre" selected>Centre-weighted</option>
+                    <option value="spot">Spot</option>
+                    <option value="average">Average</option>
+                    <option value="matrix">Matrix</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- EV Compensation -->
+        <div class="param-group">
+            <label>EV Compensation</label>
+            <div class="select-wrap">
+                <select id="p-ev">
+                    <option value="-4">-4</option>
+                    <option value="-3">-3</option>
+                    <option value="-2">-2</option>
+                    <option value="-1">-1</option>
+                    <option value="0" selected>0 (none)</option>
+                    <option value="1">+1</option>
+                    <option value="2">+2</option>
+                    <option value="3">+3</option>
+                    <option value="4">+4</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- AWB Gains -->
+        <div class="param-group">
+            <label>AWB Gains (R,B)</label>
+            <div class="select-wrap">
+                <select id="p-awbgains">
+                    <option value="1,1" selected>1.0 , 1.0 (neutral)</option>
+                    <option value="1.5,1">1.5 , 1.0 (warm)</option>
+                    <option value="1,1.5">1.0 , 1.5 (cool)</option>
+                    <option value="2,1">2.0 , 1.0 (very warm)</option>
+                    <option value="1,2">1.0 , 2.0 (very cool)</option>
+                    <option value="custom">Custom…</option>
+                </select>
+            </div>
+            <input type="text" id="p-awbgains-custom" placeholder="e.g. 1.3,0.9"
+                   style="display:none; margin-top:5px;">
+        </div>
+
+        <!-- Brightness -->
+        <div class="param-group">
+            <label>Brightness</label>
+            <div class="select-wrap">
+                <select id="p-brightness">
+                    <option value="0.5">0.5 (darker)</option>
+                    <option value="0.75">0.75</option>
+                    <option value="1" selected>1.0 (normal)</option>
+                    <option value="1.25">1.25</option>
+                    <option value="1.5">1.5 (brighter)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- HDR -->
+        <div class="param-group">
+            <label>HDR Mode</label>
+            <div class="select-wrap">
+                <select id="p-hdr">
+                    <option value="off" selected>Off</option>
+                    <option value="auto">Auto</option>
+                    <option value="sensor">Sensor</option>
+                    <option value="single-exp">Single-exposure</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Resolution -->
+        <div class="param-group">
+            <label>Resolution</label>
+            <div class="select-wrap">
+                <select id="p-resolution"  onchange="applyResolution(this.value)">
+                    <option value="1280x720" selected>1280 × 720</option>
+                    <option value="1920x1080">1920 × 1080</option>
+                    <option value="2592x1944">2592 × 1944 (full)</option>
+                    <option value="640x480">640 × 480</option>
+                    <option value="custom">Custom…</option>
+                </select>
+            </div>
+            <div class="res-pair" id="res-custom" style="display:none; margin-top:5px;">
+                <input type="number" id="p-width"  placeholder="W" min="64" max="9999" value="1280">
+                <span>×</span>
+                <input type="number" id="p-height" placeholder="H" min="64" max="9999" value="720">
+            </div>
+        </div>
+
+        <!-- Flip controls -->
+        <div class="param-group">
+            <label>Image Flip</label>
+            <div class="toggle-wrap">
+                <label class="switch">
+                    <input type="checkbox" id="p-hflip" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Horizontal flip</span>
+            </div>
+            <div class="toggle-wrap">
+                <label class="switch">
+                    <input type="checkbox" id="p-vflip" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Vertical flip</span>
+            </div>
+        </div>
+
+    </div><!-- /param-body -->
+
+    <!-- Apply row -->
+    <div class="apply-row" id="apply-row">
+        <button class="btn-apply" onclick="applyParams()">Apply Parameters</button>
+        <span id="param-status"></span>
+    </div>
+
+</div><!-- /controls-card -->
+
+
+<script>
+// ── Capture ────────────────────────────────────────────────────────────
+function capturePhoto() {
+    window.location.href = "/capture";
+}
+
+// ── Focus ──────────────────────────────────────────────────────────────
+function sendFocus(direction) {
+    const val = parseInt(document.getElementById("focus_value").value);
+    if (isNaN(val)) { alert("Please enter a whole number."); return; }
+    fetch(`/focus/${direction * val}`)
+        .then(r => { if (!r.ok) alert("Focus request failed: " + r.status); });
+}
+
+function saveFocusValue() {
+    localStorage.setItem("focus_step", document.getElementById("focus_value").value);
+}
+
+// ── Param panel toggle ─────────────────────────────────────────────────
+function toggleParams() {
+    const body   = document.getElementById("param-body");
+    const row    = document.getElementById("apply-row");
+    const chev   = document.getElementById("chevron");
+    const toggle = document.getElementById("param-toggle");
+    const open   = body.classList.toggle("open");
+    row.classList.toggle("open", open);
+    chev.classList.toggle("open", open);
+    toggle.classList.toggle("open", open);
+    localStorage.setItem("params_open", open ? "1" : "0");
+}
+
+// ── Resolution helper ──────────────────────────────────────────────────
+function applyResolution(val) {
+    const custom = document.getElementById("res-custom");
+    if (val === "custom") {
+        custom.style.display = "flex";
+    } else {
+        custom.style.display = "none";
+        const [w, h] = val.split("x");
+        document.getElementById("p-width").value  = w;
+        document.getElementById("p-height").value = h;
+    }
+}
+
+// ── AWB custom field toggle ────────────────────────────────────────────
+document.getElementById("p-awbgains").addEventListener("change", function() {
+    document.getElementById("p-awbgains-custom").style.display =
+        this.value === "custom" ? "block" : "none";
+});
+
+// ── Read current UI values → params object ─────────────────────────────
+function readParams() {
+    const awbSel = document.getElementById("p-awbgains").value;
+    const awb    = awbSel === "custom"
+                    ? document.getElementById("p-awbgains-custom").value.trim() || "1,1"
+                    : awbSel;
+    return {
+        shutter:    document.getElementById("p-shutter").value + "s",
+        gain:       document.getElementById("p-gain").value,
+        metering:   document.getElementById("p-metering").value,
+        ev:         document.getElementById("p-ev").value,
+        awbgains:   awb,
+        brightness: document.getElementById("p-brightness").value,
+        hdr:        document.getElementById("p-hdr").value,
+        width:      document.getElementById("p-width").value,
+        height:     document.getElementById("p-height").value,
+        hflip:      document.getElementById("p-hflip").checked ? "1" : "0",
+        vflip:      document.getElementById("p-vflip").checked ? "1" : "0",
+    };
+}
+
+// ── Save / restore params via localStorage ─────────────────────────────
+function saveParams(p) {
+    localStorage.setItem("cam_params", JSON.stringify(p));
+}
+
+function restoreParams() {
+    const raw = localStorage.getItem("cam_params");
+    if (!raw) return;
+    try {
+        const p = JSON.parse(raw);
+        const setVal = (id, v) => {
+            const el = document.getElementById(id);
+            if (el) el.value = v;
+        };
+        const setChk = (id, v) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = (v === "1" || v === true);
+        };
+        setVal("p-shutter",    p.shutter ? p.shutter.replace(/s$/i, "") : "0.00001");
+        setVal("p-gain",       p.gain);
+        setVal("p-metering",   p.metering);
+        setVal("p-ev",         p.ev);
+        setVal("p-brightness", p.brightness);
+        setVal("p-hdr",        p.hdr);
+        setChk("p-hflip",      p.hflip);
+        setChk("p-vflip",      p.vflip);
+
+        // AWB
+        const awbSel = document.getElementById("p-awbgains");
+        const knownVals = Array.from(awbSel.options).map(o => o.value);
+        if (p.awbgains && knownVals.includes(p.awbgains)) {
+            awbSel.value = p.awbgains;
+        } else if (p.awbgains) {
+            awbSel.value = "custom";
+            document.getElementById("p-awbgains-custom").value = p.awbgains;
+            document.getElementById("p-awbgains-custom").style.display = "block";
         }
-    </script> 
 
-    <script>
-        function dendFocus(direction) {
-            console.log("sendFocus called, direction =", direction); //DEBUG
-
-            try {
-                let el = document.getElementById("focus_value");
-                console.log("Element:", el);
-                
-                let raw = el.value;
-                console.log("Raw value:", raw);
-
-                let val = parseInt(raw);
-                console.log("Parsed val:", val);
-
-            } catch (err) {
-                console.log("JS ERROR", err); 
-            }    
-        }
-    </script>
-
-    <script>
-        function bendFocus(direction) {
-            <!-- console.log("sendFocus called, direction =", direction); //DEBU -->
-            const val = parseInt(document.getElementById("focus_value").value);
-            <!-- console.log("Parsed val:", val); -->
-
-            if (isNaN(val)) {
-                alert("Please enter a whole number.");
-                return;
+        // Resolution
+        if (p.width && p.height) {
+            const resSel = document.getElementById("p-resolution");
+            const resKey = `${p.width}x${p.height}`;
+            const knownRes = Array.from(resSel.options).map(o => o.value);
+            if (knownRes.includes(resKey)) {
+                resSel.value = resKey;
+            } else {
+                resSel.value = "custom";
+                document.getElementById("res-custom").style.display = "flex";
             }
-
-            const amount = direction * val;
-            <!-- console.log("Amount:", amount); -->
-
-            // Redirect to /focus, which does the focus movement and returns here
-            window.location.href = "/focus/" + amount;
-
-
+            document.getElementById("p-width").value  = p.width;
+            document.getElementById("p-height").value = p.height;
         }
-    </script>
+    } catch(e) { console.warn("Could not restore params:", e); }
+}
 
-    <script>
-        function sendFocus(direction) {
-            <!-- console.log("sendFocus called, direction =", direction); //DEBU --> 
-            const val = parseInt(document.getElementById("focus_value").value);
-            <!-- console.log("Parsed val:", val); -->
+// ── Apply params to server ─────────────────────────────────────────────
+function applyParams() {
+    const p = readParams();
+    saveParams(p);
 
-            if (isNaN(val)) {
-                alert("Please enter a whole number.");
-                return;
-            }
+    const statusEl = document.getElementById("param-status");
+    statusEl.textContent = "Sending…";
+    statusEl.className = "";
 
-            const amount = direction * val;
-            <!-- console.log("Amount:", amount); -->
+    fetch("/set_params", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(p)
+    })
+    .then(r => r.json())
+    .then(data => {
+        statusEl.textContent = data.status === "ok" ? "✓ Applied" : "⚠ Server error";
+        statusEl.className   = data.status === "ok" ? "ok" : "err";
+        setTimeout(() => { statusEl.textContent = ""; statusEl.className = ""; }, 3000);
+    })
+    .catch(err => {
+        statusEl.textContent = "✗ Network error";
+        statusEl.className = "err";
+        console.error(err);
+    });
+}
 
-            fetch(`/focus/${amount}`)
-               .then(response => {
-                   if (!response.ok) alert("Focus request failed" + response.status);
-               });
-        }
-    </script>
+// ── Init on load ───────────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", () => {
+    // Restore focus step
+    const savedFocus = localStorage.getItem("focus_step");
+    if (savedFocus !== null) document.getElementById("focus_value").value = savedFocus;
 
-    <script>
-        // Restore saved value at load
-        window.addEventListener("DOMContentLoaded", () => {
-            const saved = localStorage.getItem("focus_step");
-            if (saved !== null) {
-                document.getElementById("focus_value").value = saved
-            }
-        });
+    // Restore camera params
+    restoreParams();
 
-        // Save value whenever changed
-        function saveFocusValue() {
-            const v = document.getElementById("focus_value").value
-            localStorage.setItem("focus_step", v);
-        }
-    </script>
-
-
+    // Re-open panel if it was open before
+    if (localStorage.getItem("params_open") === "1") toggleParams();
+});
+</script>
 
 </body>
-</html>   
+</html>
